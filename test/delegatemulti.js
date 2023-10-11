@@ -81,6 +81,7 @@ function reDistributeVotingPower(_sourceAmounts, _targetAmounts) {
 }
 
 describe('ENS Multi Delegate', () => {
+  let firstDelegator;
   let token;
   let deployer;
   let alice;
@@ -94,6 +95,7 @@ describe('ENS Multi Delegate', () => {
 
   before(async () => {
     ({ deployer, alice, bob, charlie, dave } = await getNamedAccounts());
+    [firstDelegator] = await ethers.getSigners();
   });
 
   beforeEach(async () => {
@@ -136,7 +138,7 @@ describe('ENS Multi Delegate', () => {
 
   describe('deposit', () => {
     it('should be able to delegate multiple delegates in behalf of user', async () => {
-      const delegatorTokenAmount = await token.balanceOf(deployer);
+      const delegatorTokenAmount = await token.balanceOf(firstDelegator.address);
       // const customAmount = ethers.utils.parseEther('10000000.0'); // ens
 
       // give allowance to multi delegate contract
@@ -149,40 +151,64 @@ describe('ENS Multi Delegate', () => {
 
       await multiDelegate.delegateMulti([], delegates, amounts);
 
-      const delegatorTokenAmountAfter = await token.balanceOf(deployer);
+      // after delegation, delegator should have 0 tokens
+      const delegatorTokenAmountAfter = await token.balanceOf(firstDelegator.address);
       expect(delegatorTokenAmountAfter.toString()).to.equal('0');
 
-      // delegator must have 1/4 of the votes the delegator delegated
-      const votesOfDelegator = await token.getVotes(deployer);
+      // no tokens should be transferred to delegates
+      // all balances should be 0
+      for (let delegateTokenId of delegates) {
+        expect (await token.balanceOf(delegateTokenId)).to.equal('0');
+      }
+
+      // delegator is also first delegate, must have 1/4 of the votes the delegated votes
+      const votesOfDelegator = await token.getVotes(firstDelegator.address);
       expect(votesOfDelegator.toString()).to.equal(
         delegatorTokenAmount.div(delegates.length).toString()
       );
 
-      // delegate must have 1/4 of the votes the delegator delegated
-      const votesOfDelegate = await token.getVotes(alice);
-      expect(votesOfDelegate.toString()).to.equal(
-        delegatorTokenAmount.div(delegates.length).toString()
-      );
-
+      // each delegate must have 1/4 of the balance the delegator delegated
       for (let delegateTokenId of delegates) {
-        let balance = await multiDelegate.balanceOf(deployer, delegateTokenId);
+        let balance = await multiDelegate.balanceOf(firstDelegator.address, delegateTokenId);
         expect(balance.toString()).to.equal(
           delegatorTokenAmount.div(delegates.length).toString()
         );
       }
-
+      // delegate must have 1/4 of the votes the delegator delegated
+      for (let delegateTokenId of delegates) {
+        expect(await token.getVotes(delegateTokenId)).to.equal(
+          delegatorTokenAmount.div(delegates.length).toString()
+        );
+      }
+      // undelegete all delegates
       await multiDelegate.delegateMulti(delegates, [], amounts);
 
+      // after delegation, delegates should have 0 tokens
       for (let delegateTokenId of delegates) {
-        let balance = await multiDelegate.balanceOf(deployer, delegateTokenId);
+        let balance = await multiDelegate.balanceOf(firstDelegator.address, delegateTokenId);
         expect(balance.toString()).to.equal('0');
       }
+
+      // after delegation, delegates should have 0 votes
+      for (let delegateTokenId of delegates) {
+        expect(await token.getVotes(delegateTokenId)).to.equal('0');
+      }
+      // delegator must have all tokens returned
+      let delegatorTokenAmountAfterUndelegate = await token.balanceOf(firstDelegator.address);
+      expect(delegatorTokenAmountAfterUndelegate.toString()).to.equal(delegatorTokenAmount.toString());
+
     });
 
     it('should be able to delegate to already delegated delegates', async () => {
-      const firstDelegatorBalance = await token.balanceOf(deployer);
+      let firstDelegatorBalance = await token.balanceOf(firstDelegator.address);
+      const [_, secondDelegator] = await ethers.getSigners();
 
-      // Give allowance to multiDelegate contract
+      // transfer tokens to second delegator  (1/4 of first delegator balance)
+      await token.transfer(secondDelegator.address, firstDelegatorBalance.div(4));
+      // update first delegator balance, and second delegator balance
+      firstDelegatorBalance = await token.balanceOf(firstDelegator.address);
+
+      // Give allowances to multiDelegate contract
       await token.approve(multiDelegate.address, firstDelegatorBalance);
 
       const delegates = [alice, bob];
@@ -192,7 +218,7 @@ describe('ENS Multi Delegate', () => {
 
       await multiDelegate.delegateMulti([], delegates, amounts);
 
-      const [_, secondDelegator] = await ethers.getSigners();
+      
       const secondDelegatorBalance = await token.balanceOf(
         secondDelegator.address
       );
@@ -214,13 +240,21 @@ describe('ENS Multi Delegate', () => {
       );
       expect(secondDelegatorBalanceAfter.toString()).to.equal('0');
 
-      const votesOfDelegator = await token.getVotes(alice);
-      expect(votesOfDelegator.toString()).to.equal(
+      const votesOfAlice = await token.getVotes(alice);
+      expect(votesOfAlice.toString()).to.equal(
         firstDelegatorBalance
           .div(delegates.length)
           .add(secondDelegatorBalance.div(delegates.length))
           .toString()
       );
+      votesOfBob = await token.getVotes(bob);
+      expect(votesOfBob.toString()).to.equal(
+        firstDelegatorBalance
+          .div(delegates.length)
+          .add(secondDelegatorBalance.div(delegates.length))
+          .toString()
+      );
+
     });
 
     it('should revert if no source and target provided', async () => {
