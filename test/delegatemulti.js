@@ -144,7 +144,7 @@ describe('ENS Multi Delegate', () => {
       // give allowance to multi delegate contract
       await token.approve(multiDelegate.address, delegatorTokenAmount);
       // delegate multiple delegates
-      const delegates = [deployer, alice, bob, charlie];
+      const delegates = [firstDelegator.address, alice, bob, charlie];
       const amounts = delegates.map(() =>
         delegatorTokenAmount.div(delegates.length)
       );
@@ -258,7 +258,7 @@ describe('ENS Multi Delegate', () => {
     });
 
     it('should revert if no source and target provided', async () => {
-      const delegatorTokenAmount = await token.balanceOf(deployer);
+      const delegatorTokenAmount = await token.balanceOf(firstDelegator.address);
 
       // give allowance to multi delegate contract
       await token.approve(multiDelegate.address, delegatorTokenAmount);
@@ -271,13 +271,13 @@ describe('ENS Multi Delegate', () => {
 
   describe('re-deposit', () => {
     it('should be able to re-delegate multiple delegates in behalf of user (1:1)', async () => {
-      const delegatorTokenAmount = await token.balanceOf(deployer);
+      const delegatorTokenAmount = await token.balanceOf(firstDelegator.address);
       // const customAmount = ethers.utils.parseEther('10000000.0'); // ens
 
       // give allowance to multi delegate contract
       await token.approve(multiDelegate.address, delegatorTokenAmount);
       // delegate multiple delegates
-      const delegates = [deployer, alice];
+      const delegates = [firstDelegator.address, alice];
 
       const amounts = delegates.map(() =>
         delegatorTokenAmount.div(delegates.length)
@@ -285,7 +285,7 @@ describe('ENS Multi Delegate', () => {
 
       await multiDelegate.delegateMulti([], delegates, amounts);
 
-      const delegatorTokenAmountAfter = await token.balanceOf(deployer);
+      const delegatorTokenAmountAfter = await token.balanceOf(firstDelegator.address);
       expect(delegatorTokenAmountAfter.toString()).to.equal('0');
 
       // delegate must have 1/2 of the votes the delegator delegated
@@ -295,7 +295,7 @@ describe('ENS Multi Delegate', () => {
       );
 
       for (let delegateTokenId of delegates) {
-        let balance = await multiDelegate.balanceOf(deployer, delegateTokenId);
+        let balance = await multiDelegate.balanceOf(firstDelegator.address, delegateTokenId);
         expect(balance.toString()).to.equal(
           delegatorTokenAmount.div(delegates.length).toString()
         );
@@ -309,12 +309,12 @@ describe('ENS Multi Delegate', () => {
       await multiDelegate.delegateMulti(delegates, newDelegates, newAmounts);
 
       for (let delegateTokenId of delegates) {
-        let balance = await multiDelegate.balanceOf(deployer, delegateTokenId);
+        let balance = await multiDelegate.balanceOf(firstDelegator.address, delegateTokenId);
         expect(balance.toString()).to.equal('0');
       }
 
       for (let delegateTokenId of newDelegates) {
-        let balance = await multiDelegate.balanceOf(deployer, delegateTokenId);
+        let balance = await multiDelegate.balanceOf(firstDelegator.address, delegateTokenId);
         expect(balance.toString()).to.equal(
           delegatorTokenAmount.div(delegates.length).toString()
         );
@@ -328,13 +328,13 @@ describe('ENS Multi Delegate', () => {
     });
 
     it('should be able to re-delegate multiple delegates in behalf of user (many:many)', async () => {
-      const delegatorTokenAmount = await token.balanceOf(deployer);
+      const delegatorTokenAmount = await token.balanceOf(firstDelegator.address);
       // const customAmount = ethers.utils.parseEther('10000000.0'); // ens
 
       // give allowance to multi delegate contract
       await token.approve(multiDelegate.address, delegatorTokenAmount);
       // delegate multiple delegates
-      const delegates = [deployer, alice];
+      const delegates = [firstDelegator.address, alice];
 
       const amounts = delegates.map(() =>
         delegatorTokenAmount.div(delegates.length)
@@ -342,7 +342,7 @@ describe('ENS Multi Delegate', () => {
 
       await multiDelegate.delegateMulti([], delegates, amounts);
 
-      const delegatorTokenAmountAfter = await token.balanceOf(deployer);
+      const delegatorTokenAmountAfter = await token.balanceOf(firstDelegator.address);
       expect(delegatorTokenAmountAfter.toString()).to.equal('0');
 
       // delegate must have 1/2 of the votes the delegator delegated
@@ -352,7 +352,7 @@ describe('ENS Multi Delegate', () => {
       );
 
       for (let delegateTokenId of delegates) {
-        let balance = await multiDelegate.balanceOf(deployer, delegateTokenId);
+        let balance = await multiDelegate.balanceOf(firstDelegator.address, delegateTokenId);
         expect(balance.toString()).to.equal(
           delegatorTokenAmount.div(delegates.length).toString()
         );
@@ -378,12 +378,12 @@ describe('ENS Multi Delegate', () => {
       await multiDelegate.delegateMulti(sources, targets, newAmounts);
 
       for (let delegateTokenId of delegates) {
-        let balance = await multiDelegate.balanceOf(deployer, delegateTokenId);
+        let balance = await multiDelegate.balanceOf(firstDelegator.address, delegateTokenId);
         expect(balance.toString()).to.equal('0');
       }
 
       for (let delegateTokenId of newDelegates) {
-        let balance = await multiDelegate.balanceOf(deployer, delegateTokenId);
+        let balance = await multiDelegate.balanceOf(firstDelegator.address, delegateTokenId);
         expect(balance.toString()).to.equal(
           delegatorTokenAmount.div(newDelegates.length).toString()
         );
@@ -396,20 +396,20 @@ describe('ENS Multi Delegate', () => {
     });
 
     it('should be able to re-delegate to already delegated delegates', async () => {
-      const delegatorTokenAmount = await token.balanceOf(deployer);
+      const delegatorTokenAmount = await token.balanceOf(firstDelegator.address);
       // const customAmount = ethers.utils.parseEther('10000000.0'); // ens
 
       // give allowance to multi delegate contract
       await token.approve(multiDelegate.address, delegatorTokenAmount);
       // delegate multiple delegates
-      const delegates = [deployer, alice];
+      const delegates = [firstDelegator.address, alice];
       const amounts = delegates.map(() =>
         delegatorTokenAmount.div(delegates.length)
       );
 
       await multiDelegate.delegateMulti([], delegates, amounts);
 
-      const delegatorTokenAmountAfter = await token.balanceOf(deployer);
+      const delegatorTokenAmountAfter = await token.balanceOf(firstDelegator.address);
       expect(delegatorTokenAmountAfter.toString()).to.equal('0');
 
       // delegate must have 1/2 of the votes the delegator delegated
@@ -419,7 +419,7 @@ describe('ENS Multi Delegate', () => {
       );
 
       for (let delegateTokenId of delegates) {
-        let balance = await multiDelegate.balanceOf(deployer, delegateTokenId);
+        let balance = await multiDelegate.balanceOf(firstDelegator.address, delegateTokenId);
         expect(balance.toString()).to.equal(
           delegatorTokenAmount.div(delegates.length).toString()
         );
@@ -445,12 +445,12 @@ describe('ENS Multi Delegate', () => {
       await multiDelegate.delegateMulti(sources, targets, newAmounts);
 
       for (let delegateTokenId of delegates) {
-        let balance = await multiDelegate.balanceOf(deployer, delegateTokenId);
+        let balance = await multiDelegate.balanceOf(firstDelegator.address, delegateTokenId);
         expect(balance.toString()).to.equal('0');
       }
 
       for (let delegateTokenId of newDelegates) {
-        let balance = await multiDelegate.balanceOf(deployer, delegateTokenId);
+        let balance = await multiDelegate.balanceOf(firstDelegator.address, delegateTokenId);
         expect(balance.toString()).to.equal(
           delegatorTokenAmount.div(delegates.length).toString()
         );
@@ -480,13 +480,13 @@ describe('ENS Multi Delegate', () => {
     });
 
     it('should revert if target amount is higher than source amount + caller allowance', async () => {
-      const delegatorTokenAmount = await token.balanceOf(deployer);
+      const delegatorTokenAmount = await token.balanceOf(firstDelegator.address);
       // const customAmount = ethers.utils.parseEther('10000000.0'); // ens
 
       // give allowance to multi delegate contract
       await token.approve(multiDelegate.address, delegatorTokenAmount);
       // delegate multiple delegates
-      const delegates = [deployer, alice];
+      const delegates = [firstDelegator.address, alice];
       const amounts = delegates.map(() =>
         delegatorTokenAmount.div(delegates.length)
       );
@@ -516,12 +516,12 @@ describe('ENS Multi Delegate', () => {
     });
 
     it('should revert if at least one source address is not delegate of the caller', async () => {
-      const delegatorTokenAmount = await token.balanceOf(deployer);
+      const delegatorTokenAmount = await token.balanceOf(firstDelegator.address);
 
       // give allowance to multi delegate contract
       await token.approve(multiDelegate.address, delegatorTokenAmount);
       // delegate multiple delegates
-      const delegates = [deployer, alice];
+      const delegates = [firstDelegator.address, alice];
       const amounts = delegates.map(() =>
         delegatorTokenAmount.div(delegates.length)
       );
@@ -556,7 +556,7 @@ describe('ENS Multi Delegate', () => {
 
   describe('withdraw', () => {
     it('should be able to withdraw fully', async () => {
-      const delegatorTokenAmount = await token.balanceOf(deployer);
+      const delegatorTokenAmount = await token.balanceOf(firstDelegator.address);
       // const customAmount = ethers.utils.parseEther('10000000.0'); // ens
 
       // give allowance to multi delegate contract
@@ -569,25 +569,25 @@ describe('ENS Multi Delegate', () => {
 
       await multiDelegate.delegateMulti([], delegates, amounts);
 
-      const delegatorTokenAmountAfterDeposit = await token.balanceOf(deployer);
+      const delegatorTokenAmountAfterDeposit = await token.balanceOf(firstDelegator.address);
       expect(delegatorTokenAmountAfterDeposit.toString()).to.equal('0');
 
       await multiDelegate.delegateMulti(delegates, [], amounts);
 
-      const delegatorTokenAmountAfterWithdraw = await token.balanceOf(deployer);
+      const delegatorTokenAmountAfterWithdraw = await token.balanceOf(firstDelegator.address);
       expect(delegatorTokenAmountAfterWithdraw.toString()).to.equal(
         delegatorTokenAmount.toString()
       );
     });
 
     it('should be able to withdraw partially', async () => {
-      const delegatorTokenAmount = await token.balanceOf(deployer);
+      const delegatorTokenAmount = await token.balanceOf(firstDelegator.address);
       // const customAmount = ethers.utils.parseEther('10000000.0'); // ens
 
       // give allowance to multi delegate contract
       await token.approve(multiDelegate.address, delegatorTokenAmount);
       // delegate multiple delegates
-      const delegates = [deployer, alice, bob, charlie];
+      const delegates = [firstDelegator.address, alice, bob, charlie];
       const amounts = delegates.map(() =>
         delegatorTokenAmount.div(delegates.length)
       );
@@ -601,7 +601,7 @@ describe('ENS Multi Delegate', () => {
       await multiDelegate.delegateMulti(delegates, [], newAmounts);
 
       for (let delegateTokenId of delegates) {
-        let balance = await multiDelegate.balanceOf(deployer, delegateTokenId);
+        let balance = await multiDelegate.balanceOf(firstDelegator.address, delegateTokenId);
         expect(balance.toString()).to.equal(
           delegatorTokenAmount.div(delegates.length * 2).toString()
         );
@@ -609,13 +609,13 @@ describe('ENS Multi Delegate', () => {
     });
 
     it('should fail to withdraw if amount exceeds', async () => {
-      const delegatorTokenAmount = await token.balanceOf(deployer);
+      const delegatorTokenAmount = await token.balanceOf(firstDelegator.address);
       // const customAmount = ethers.utils.parseEther('10000000.0'); // ens
 
       // give allowance to multi delegate contract
       await token.approve(multiDelegate.address, delegatorTokenAmount);
       // delegate multiple delegates
-      const delegates = [deployer, alice, bob, charlie];
+      const delegates = [firstDelegator.address, alice, bob, charlie];
       const amounts = delegates.map(() =>
         delegatorTokenAmount.div(delegates.length)
       );
@@ -632,20 +632,20 @@ describe('ENS Multi Delegate', () => {
     });
 
     it('should fail to withdraw if delegate was not delegated', async () => {
-      const delegatorTokenAmount = await token.balanceOf(deployer);
+      const delegatorTokenAmount = await token.balanceOf(firstDelegator.address);
       // const customAmount = ethers.utils.parseEther('10000000.0'); // ens
 
       // give allowance to multi delegate contract
       await token.approve(multiDelegate.address, delegatorTokenAmount);
       // delegate multiple delegates
-      const delegates = [deployer, alice, bob, charlie];
+      const delegates = [firstDelegator.address, alice, bob, charlie];
       const amounts = delegates.map(() =>
         delegatorTokenAmount.div(delegates.length)
       );
 
       await multiDelegate.delegateMulti([], delegates, amounts);
 
-      const wrongDelegates = [deployer, alice, bob, dave];
+      const wrongDelegates = [firstDelegator.address, alice, bob, dave];
       const withdrawAmounts = wrongDelegates.map(() =>
         delegatorTokenAmount.div(wrongDelegates.length)
       );
@@ -658,7 +658,7 @@ describe('ENS Multi Delegate', () => {
 
   describe('allowance', () => {
     it('should revert if allowance is not provided', async () => {
-      const delegatorTokenAmount = await token.balanceOf(deployer);
+      const delegatorTokenAmount = await token.balanceOf(firstDelegator.address);
 
       const delegates = [alice];
       const amounts = delegates.map(() =>
@@ -671,7 +671,7 @@ describe('ENS Multi Delegate', () => {
     });
 
     it('should revert if allowance is lesser than provided amount', async () => {
-      const delegatorTokenAmount = await token.balanceOf(deployer);
+      const delegatorTokenAmount = await token.balanceOf(firstDelegator.address);
       const customAmount = ethers.utils.parseEther('100000.0'); // total ens 77000000
 
       // give allowance to multi delegate contract
